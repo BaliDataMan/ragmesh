@@ -1,0 +1,11 @@
+[project]
+name = "ragmesh"
+version = "0.0.1"
+description = "Retrieval as a mesh of MCP services — an agentic RAG platform built on LangGraph. Under active development."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+authors = [{ name = "Sahil Bali", email = "datamansahil@gmail.com" }]
+
+[project.urls]
+Repository = "https://github.com/BaliDataMan/ragmesh"

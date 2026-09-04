@@ -8,3 +8,14 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Personal planning docs, not for the public repo
+/docs/
+
+# Secrets and generated artifacts
+.env
+data/
+.DS_Store
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

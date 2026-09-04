@@ -176,13 +176,27 @@ Each entry follows the same shape: **Decision → Why → Alternatives rejected 
 
 ---
 
-## 13. Explicitly deferred beyond v0.1 (and why)
+## 13. Packaging and release: PyPI via tag-triggered Trusted Publishing
+
+**Decision:** Releases publish to PyPI (`pypi.org/project/ragmesh`) via a dedicated GitHub Actions workflow (`.github/workflows/publish.yml`), triggered only by pushing a `v*` git tag, authenticating to PyPI through OIDC Trusted Publishing rather than a long-lived API token stored as a repo secret.
+
+**Why:** `ci.yml` runs on every push/PR and must never have publish credentials in scope — a separate, tag-gated workflow keeps "run tests" and "ship a release" as distinct, deliberate actions. Trusted Publishing removes the need to generate, store, and eventually rotate a `PYPI_API_TOKEN` secret; GitHub mints a short-lived credential per run instead. The workflow also hard-fails if the tag's version doesn't match `pyproject.toml`, so a release can't accidentally publish the wrong version.
+
+**Alternatives rejected:** Publishing on every push to `main` (no meaningful "release" boundary, and would immediately fail on the second push since PyPI rejects re-uploading an existing version); a long-lived API token secret (works, but is a standing credential to leak or rotate — Trusted Publishing is now PyPI's own recommended approach for exactly this reason).
+
+**Trade-off accepted:** Releasing requires a manual, explicit sequence (bump version, commit, tag, push tag) rather than happening automatically — this is intentional friction, not an oversight; see `developer-guide.md`'s "Releasing a new version" section for the exact steps.
+
+**Revisit when:** N/A for this repo's scale — reconsider only if release cadence becomes frequent enough that the manual version-bump step becomes the actual bottleneck.
+
+---
+
+## 14. Explicitly deferred beyond v0.1 (and why)
 
 Multi-agent supervision (v0.2), eval-gated CI with a golden-question regression gate (v0.3), and one-command AWS deploy via Terraform/CDK (v1.0) are all out of scope for this pass, even though they're part of the longer-term playbook.
 
 **Why defer:** The single biggest risk called out in the source planning docs is scoping too big and abandoning it before anything ships — the same pattern the user's own Substack has shown twice. Landing a working, tested, documented v0.1 and pinning it is worth more than an ambitious-but-unfinished v0.3. Each later milestone can be scoped and planned fresh once v0.1 is actually running, rather than speculatively designed now against assumptions that may not hold once real code exists.
 
-**Revisit when:** v0.1 is shipped, tagged, and pinned. Not before.
+**Revisit when:** v0.1 is shipped, tagged, and pinned — **done**: tagged `v0.1.0`, published to PyPI. v0.2 can now be scoped for real.
 
 ---
 

@@ -16,6 +16,7 @@ individual concepts (pydantic-settings, MCP transports, LangGraph, etc.), see
   - [Editing the sample corpus](#editing-the-sample-corpus)
 - [5. Run the CLI directly (no API server)](#5-run-the-cli-directly-no-api-server)
 - [6. The opt-in integration test](#6-the-opt-in-integration-test)
+- [7. Releasing a new version](#7-releasing-a-new-version)
 - [Project layout](#project-layout)
 - [How a request flows end to end](#how-a-request-flows-end-to-end)
 - [Troubleshooting](#troubleshooting)
@@ -147,6 +148,63 @@ This actually runs `docker compose up --build`, polls `/health`, hits `/chat`,
 then tears the stack down. It needs Docker and a real LLM key in `.env` — it is
 **not** run in CI (see `project-docs/architecture-rationale.md` #11) and should be run
 manually before tagging a release.
+
+## 7. Releasing a new version
+
+Releases publish to [PyPI](https://pypi.org/project/ragmesh/) via a tag-triggered
+GitHub Actions workflow (`.github/workflows/publish.yml`), authenticated with PyPI
+Trusted Publishing (OIDC) — no API token secret involved. See
+`architecture-rationale.md` #13 for why it's shaped this way.
+
+**One-time setup (already done for this repo, documented here for reference or a
+fork):**
+1. On [pypi.org's Trusted Publishing settings](https://pypi.org/manage/project/ragmesh/settings/publishing/)
+   for this project, add a trusted publisher: owner `BaliDataMan`, repository
+   `ragmesh`, workflow filename `publish.yml`, environment name `pypi`.
+2. On GitHub, under repo **Settings → Environments**, create an environment named
+   `pypi` (matches the workflow's `environment: pypi`). Adding a required reviewer
+   here makes every publish need a manual approval click before it runs — a good
+   safety net, since a bad publish to PyPI can never be undone or overwritten.
+
+**Every release, in order:**
+
+```bash
+# 1. Bump the version — pick the next real semver, e.g.:
+#    sed -i '' 's/^version = ".*"/version = "0.2.0"/' pyproject.toml
+#    (or edit pyproject.toml's `version` field directly)
+
+# 2. Commit the bump (through the normal branch -> PR -> merge flow, same as any
+#    other change — do not push a version bump straight to main)
+git checkout -b chore/release-0.2.0
+git add pyproject.toml
+git commit -m "Bump version to 0.2.0 for release"
+git push -u origin chore/release-0.2.0
+# open a PR, merge it, then sync local main:
+git checkout main
+git fetch origin
+git merge --ff-only origin/main
+
+# 3. Tag the merged commit and push the tag — this is what actually triggers
+#    the publish workflow
+git tag v0.2.0
+git push origin v0.2.0
+
+# 4. If the `pypi` environment has a required reviewer, approve the run under the
+#    repo's Actions tab (Review deployments -> pypi -> Approve).
+
+# 5. Verify: check https://pypi.org/project/ragmesh/#history for the new version.
+```
+
+**Non-negotiable rule:** the git tag (`vX.Y.Z`) must exactly match `pyproject.toml`'s
+`version` field (without the `v` prefix) — the workflow checks this and fails the
+run otherwise, on purpose, so a mismatched release can't silently ship.
+
+**Also update before/alongside each release:**
+- This developer guide and `architecture-rationale.md` if the release changes
+  anything they describe.
+- `README.md`'s badges/version references if applicable.
+- Any deferred-scope note (see `architecture-rationale.md` #14) whose "revisit when"
+  condition the release just satisfied.
 
 ## Project layout
 

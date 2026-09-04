@@ -7,5 +7,75 @@ requires-python = ">=3.11"
 license = "Apache-2.0"
 authors = [{ name = "Sahil Bali", email = "datamansahil@gmail.com" }]
 
+dependencies = [
+    "langgraph>=0.2.60",
+    "langchain>=0.3.14",
+    "langchain-community>=0.3.14",
+    "langchain-text-splitters>=0.3.4",
+    "langchain-mcp-adapters>=0.0.5",
+    "langchain-huggingface>=0.1.2",
+    "sentence-transformers>=3.3.1",
+    "torch>=2.2",
+    "faiss-cpu>=1.9.0",
+    "mcp>=1.1.2",
+    "fastapi>=0.115.6",
+    "uvicorn[standard]>=0.34.0",
+    "pydantic-settings>=2.7.1",
+]
+
+[project.optional-dependencies]
+anthropic = ["langchain-anthropic>=0.3.3"]
+openai = ["langchain-openai>=0.2.14"]
+bedrock = ["langchain-aws>=0.2.10"]
+all = ["ragmesh[anthropic,openai,bedrock]"]
+
 [project.urls]
 Repository = "https://github.com/BaliDataMan/ragmesh"
+
+[project.scripts]
+ragmesh = "ragmesh.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.25.1",
+    "httpx>=0.28.1",
+    "ruff>=0.8.4",
+    "mypy>=1.14.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+
+[tool.uv.sources]
+# CPU-only torch on Linux: sentence-transformers pulls torch transitively,
+# and the default PyPI wheel for Linux bundles the full CUDA stack (~2GB)
+# with no GPU available to use it in this repo's Docker containers. macOS
+# wheels never bundle CUDA (no NVIDIA GPUs on Apple hardware), so the
+# override only needs to redirect the Linux branch of the resolution.
+# See docs/adr/0003 for the related "local embeddings, not a paid API"
+# decision this extends.
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = ["slow: integration tests that require docker/network"]

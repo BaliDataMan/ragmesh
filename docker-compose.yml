@@ -1,0 +1,26 @@
+services:
+  mcp-server:
+    build:
+      context: .
+      dockerfile: docker/mcp-server.Dockerfile
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('localhost', 8000), timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  agent-api:
+    build:
+      context: .
+      dockerfile: docker/agent.Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      RAGMESH_LLM_PROVIDER: ${RAGMESH_LLM_PROVIDER:-anthropic}
+      RAGMESH_LLM_MODEL: ${RAGMESH_LLM_MODEL:-claude-sonnet-4-5-20250929}
+      RAGMESH_MCP_SERVER_URL: http://mcp-server:8000/mcp
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    depends_on:
+      mcp-server:
+        condition: service_healthy

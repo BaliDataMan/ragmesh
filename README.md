@@ -1,6 +1,7 @@
 # ragmesh
 
 [![CI](https://github.com/BaliDataMan/ragmesh/actions/workflows/ci.yml/badge.svg)](https://github.com/BaliDataMan/ragmesh/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/ragmesh.svg)](https://pypi.org/project/ragmesh/)
 ![Python 3.12](https://img.shields.io/badge/python-3.12-blue)
 ![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-informational)
 
@@ -41,6 +42,12 @@ curl -X POST localhost:8080/chat \
 
 That's the only secret required — retrieval (embeddings + FAISS) needs no
 API key at all (see `project-docs/adr/0003`).
+
+Also published on [PyPI](https://pypi.org/project/ragmesh/) (`pip install ragmesh`)
+— note that installing the package alone only gives you the `ragmesh` CLI and
+library code; it still needs a running MCP retrieval server (`RAGMESH_MCP_SERVER_URL`)
+to talk to, since retrieval is a real network service, not a bundled dependency.
+`docker compose up` above is the fastest way to get both pieces running together.
 
 ## Local development
 
